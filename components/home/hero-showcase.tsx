@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { Vehicle } from "@/types/vehicle";
 import { heroImage } from "@/data/vehicle-images";
 import { formatMileage, formatPrice, formatYear } from "@/lib/format";
@@ -14,7 +14,7 @@ import { ArrowLeft, ArrowRight } from "@/components/ui/icons";
  * Hero: o veículo é o protagonista. Mostra os destaques um a um, com troca
  * manual (sem autoplay — ninguém perde o que estava lendo).
  */
-export function HeroShowcase({ featured }: { featured: Vehicle[] }) {
+export function HeroShowcase({ featured, search }: { featured: Vehicle[]; search?: ReactNode }) {
   const [i, setI] = useState(0);
   const total = featured.length;
   const v = featured[i];
@@ -22,24 +22,27 @@ export function HeroShowcase({ featured }: { featured: Vehicle[] }) {
   const go = (d: number) => setI((x) => (x + d + total) % total);
 
   return (
-    <section className="relative isolate flex min-h-[640px] flex-col overflow-hidden bg-ink text-paper h-[min(100svh,960px)]" aria-label="Destaque">
-      <AnimatePresence initial={false} mode="sync">
-        <motion.div
-          key={img.src + i}
-          className="absolute inset-0 -z-10"
-          initial={{ opacity: 0, scale: 1.03 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
-        >
-          <Image src={img.src} alt={img.alt} fill priority={i === 0} sizes="100vw" className="object-cover object-[60%_center]" />
-        </motion.div>
-      </AnimatePresence>
+    <section className="relative isolate z-10 flex min-h-[max(640px,min(100svh,980px))] flex-col bg-ink text-paper" aria-label="Destaque">
+      {/* Recorte próprio da foto: a seção não corta nada, para as listas da busca poderem abrir */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <AnimatePresence initial={false} mode="sync">
+          <motion.div
+            key={img.src + i}
+            className="absolute inset-0"
+            initial={{ opacity: 0, scale: 1.03 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+          >
+            <Image src={img.src} alt={img.alt} fill priority={i === 0} sizes="100vw" className="object-cover object-[60%_center]" />
+          </motion.div>
+        </AnimatePresence>
+      </div>
       {/* Véu para legibilidade do texto sobre a foto */}
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/40 to-transparent" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-1/2 bg-gradient-to-t from-ink to-transparent" />
 
-      <div className="container-x flex flex-1 flex-col justify-end pb-10 pt-28 lg:justify-center lg:pb-16">
+      <div className="container-x flex flex-1 flex-col justify-end pb-8 pt-28 lg:pb-12 lg:pt-36">
         <p className="eyebrow text-paper/70">Ingá Multimarcas</p>
         <h1 className="display mt-5 max-w-[14ch] text-[3.25rem] sm:text-7xl lg:text-8xl xl:text-[7.5rem]">
           Escolha no estoque.
@@ -53,6 +56,7 @@ export function HeroShowcase({ featured }: { featured: Vehicle[] }) {
             Avaliar meu carro
           </ButtonLink>
         </div>
+        {search ? <div className="relative z-20 mt-10 lg:mt-14">{search}</div> : null}
       </div>
 
       {v ? (

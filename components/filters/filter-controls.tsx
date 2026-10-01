@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import type { FacetOption } from "@/lib/filters/facets";
 import { formatNumber, parseDigits } from "@/lib/format";
 import { ChevronDown } from "@/components/ui/icons";
+import { Select } from "@/components/ui/select";
 
 /** Grupo recolhível (details/summary nativo: teclado e leitor de tela de graça). */
 export function FilterGroup({
@@ -248,7 +249,7 @@ export function RangeInputs({
   );
 }
 
-/** Ano mínimo/máximo com selects (lista curta e finita, derivada dos dados). */
+/** Ano mínimo/máximo (lista curta e finita, derivada dos dados). */
 export function YearRange({
   min,
   max,
@@ -260,45 +261,37 @@ export function YearRange({
   bounds: { min: number; max: number };
   onChange: (min?: number, max?: number) => void;
 }) {
-  const id = useId();
   const years: number[] = [];
   for (let y = bounds.max; y >= bounds.min; y--) years.push(y);
-  const select = (key: "min" | "max", value: number | undefined, label: string) => (
-    <div className="relative flex-1">
-      <label htmlFor={`${id}-${key}`} className="sr-only">
-        Ano {label}
-      </label>
-      <select
-        id={`${id}-${key}`}
-        value={value ?? ""}
-        onChange={(e) => {
-          const v = e.target.value ? Number(e.target.value) : undefined;
-          if (key === "min") onChange(v, max);
-          else onChange(min, v);
-        }}
-        className="tnum h-11 w-full appearance-none border border-line bg-white pl-3 pr-8 text-sm text-ink focus:border-ink focus:outline-none rounded-[var(--radius-xs)]"
-      >
-        <option value="">{key === "min" ? "De" : "Até"}</option>
-        {years
-          .filter((y) => (key === "min" ? max === undefined || y <= max : min === undefined || y >= min))
-          .map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-mute" />
-    </div>
-  );
+  const toNum = (v: string) => (v ? Number(v) : undefined);
+  const opts = (keep: (y: number) => boolean) => years.filter(keep).map((y) => ({ value: String(y), label: String(y) }));
   return (
     <fieldset>
       <legend className="mb-2 text-[0.8125rem] font-semibold text-ink">Ano do modelo</legend>
       <div className="flex items-center gap-2">
-        {select("min", min, "mínimo")}
+        <Select
+          label="Ano mínimo"
+          hideLabel
+          className="flex-1"
+          value={min === undefined ? "" : String(min)}
+          onChange={(v) => onChange(toNum(v), max)}
+          options={opts((y) => max === undefined || y <= max)}
+          placeholder="De"
+          testId="year-min"
+        />
         <span aria-hidden className="text-mute">
           –
         </span>
-        {select("max", max, "máximo")}
+        <Select
+          label="Ano máximo"
+          hideLabel
+          className="flex-1"
+          value={max === undefined ? "" : String(max)}
+          onChange={(v) => onChange(min, toNum(v))}
+          options={opts((y) => min === undefined || y >= min)}
+          placeholder="Até"
+          testId="year-max"
+        />
       </div>
     </fieldset>
   );

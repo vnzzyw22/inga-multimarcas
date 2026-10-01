@@ -22,16 +22,12 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroShowcase featured={featured} />
+      <HeroShowcase featured={featured} search={<QuickSearch data={qs} />} />
 
-      {/* 1. Busca: logo após o hero, antes de qualquer conteúdo institucional */}
-      <section className="bg-ink pb-14 text-paper" aria-labelledby="busca">
+      {/* 1. Atalhos por carroceria (a busca rápida fica dentro do hero, sobre a foto) */}
+      <section className="bg-ink pb-12 pt-8 text-paper" aria-label="Atalhos por carroceria">
         <div className="container-x">
-          <h2 id="busca" className="sr-only">
-            Buscar veículos
-          </h2>
-          <QuickSearch data={qs} />
-          <nav aria-label="Atalhos por carroceria" className="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2">
+          <nav aria-label="Atalhos por carroceria" className="flex flex-wrap items-center gap-x-1 gap-y-2">
             <span className="eyebrow mr-3 text-mute-dark">Carroceria</span>
             {bodies.map((b) => (
               <Link

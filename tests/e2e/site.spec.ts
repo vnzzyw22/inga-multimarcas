@@ -15,6 +15,13 @@ async function count(page: Page) {
   return Number(text.match(/\d+/)?.[0] ?? 0);
 }
 
+/** Escolhe uma opção no Select próprio (listbox). */
+async function pick(page: Page, testId: string, option: string | RegExp) {
+  await page.getByTestId(testId).click();
+  await page.getByRole("listbox").getByRole("option", { name: option, exact: typeof option === "string" }).click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+}
+
 async function openFilters(page: Page) {
   if (isMobile(page)) await page.getByRole("button", { name: /^Filtros/ }).click();
 }
@@ -35,8 +42,9 @@ test("1. home carrega com hero, busca e destaques, sem erros de console", async 
 
 test("2. busca rápida leva ao estoque filtrado", async ({ page }) => {
   await page.goto("/");
-  await page.getByTestId("qs-brand").selectOption("toyota");
-  await page.getByTestId("qs-model").selectOption("corolla");
+  await expect(page.getByTestId("qs-model")).toBeDisabled();
+  await pick(page, "qs-brand", "Toyota");
+  await pick(page, "qs-model", "Corolla");
   await page.getByTestId("qs-submit").click();
   await expect(page).toHaveURL(/\/estoque\?marca=toyota&modelo=corolla/);
   await expect(page.getByTestId("result-count")).toHaveText("2 veículos encontrados");
@@ -83,6 +91,7 @@ test("3-6. filtros: marca, preço, combinação, limpar", async ({ page }) => {
 
 test("4. filtro de preço sozinho respeita a faixa", async ({ page }) => {
   await page.goto("/estoque?preco-min=100000&preco-max=150000&ordem=menor-preco");
+  await expect(page.getByTestId("vehicle-grid")).toBeVisible();
   const prices = await page.locator('[data-testid="vehicle-grid"] article p.font-display').allInnerTexts();
   const values = prices.map((p) => Number(p.replace(/\D/g, "")));
   expect(values.length).toBeGreaterThan(0);
@@ -95,12 +104,32 @@ test("4. filtro de preço sozinho respeita a faixa", async ({ page }) => {
 test("7. ordenação por menor preço", async ({ page }) => {
   await page.goto("/estoque");
   await openFilters(page);
-  const select = isMobile(page) ? page.locator("#sort-mobile") : page.locator("#sort-desktop");
-  await select.selectOption("menor-preco");
+  await pick(page, isMobile(page) ? "sort-mobile" : "sort-desktop", "Menor preço");
   await expect(page).toHaveURL(/ordem=menor-preco/);
   if (isMobile(page)) await page.getByTestId("drawer-apply").click();
+  await expect(page.getByTestId("vehicle-grid")).toBeVisible();
   const prices = (await page.locator('[data-testid="vehicle-grid"] article p.font-display').allInnerTexts()).map((p) => Number(p.replace(/\D/g, "")));
   expect(prices).toEqual([...prices].sort((a, b) => a - b));
+});
+
+test("select próprio funciona pelo teclado", async ({ page }) => {
+  await page.goto("/");
+  const trigger = page.getByTestId("qs-ymin");
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  const list = page.getByRole("listbox");
+  await expect(list).toBeFocused();
+  await page.keyboard.press("ArrowDown"); // primeiro ano (mais recente)
+  await page.keyboard.press("Enter");
+  await expect(list).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveText("2025");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await expect(trigger).toHaveText("2025");
+  await page.getByTestId("qs-submit").click();
+  await expect(page).toHaveURL(/ano-min=2025/);
 });
 
 test("estado vazio com limpar filtros", async ({ page }) => {

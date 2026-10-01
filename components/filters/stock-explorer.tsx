@@ -12,7 +12,8 @@ import { SORT_KEYS, emptyFilters, sortLabels, type SortKey, type VehicleFilters 
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Close, Sliders } from "@/components/ui/icons";
+import { Close, Sliders } from "@/components/ui/icons";
+import { Select } from "@/components/ui/select";
 
 function resultLabel(n: number) {
   if (n === 0) return "Nenhum veículo encontrado";
@@ -49,25 +50,15 @@ export function StockExplorer({ vehicles }: { vehicles: Vehicle[] }) {
 
   const clearAll = () => navigate(emptyFilters());
 
-  const sortSelect = (id: string) => (
-    <div className="relative">
-      <label htmlFor={id} className="sr-only">
-        Ordenar por
-      </label>
-      <select
-        id={id}
-        value={sort}
-        onChange={(e) => navigate(filters, e.target.value as SortKey)}
-        className="h-11 w-full appearance-none border border-line bg-white pl-3 pr-9 text-[0.8125rem] font-semibold text-ink focus:border-ink focus:outline-none rounded-[var(--radius-xs)]"
-      >
-        {SORT_KEYS.map((k) => (
-          <option key={k} value={k}>
-            {sortLabels[k]}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-mute" />
-    </div>
+  const sortSelect = (testId: string) => (
+    <Select
+      label="Ordenar por"
+      hideLabel
+      value={sort}
+      onChange={(v) => navigate(filters, v as SortKey)}
+      options={SORT_KEYS.map((k) => ({ value: k, label: sortLabels[k] }))}
+      testId={testId}
+    />
   );
 
   return (

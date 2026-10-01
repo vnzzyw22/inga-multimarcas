@@ -62,7 +62,7 @@ function svgFor(body, shot) {
       <circle cx="${w2}" cy="300" r="56" fill="#050505"/><circle cx="${w2}" cy="300" r="30" fill="#2b2b2b"/>
     </g>
   </g>
-  <text x="64" y="86" font-family="Arial, sans-serif" font-size="26" letter-spacing="6" fill="${text}">FOTO DEMO · ${body.toUpperCase()} · ${shot.label}</text>
+  <text x="64" y="86" font-family="Arial, sans-serif" font-size="18" letter-spacing="5" fill="${text}">FOTO DEMO · ${body.toUpperCase()} · ${shot.label}</text>
 </svg>`;
 }
 
