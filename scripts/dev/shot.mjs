@@ -4,8 +4,16 @@ const [,, path, w, h, out, full] = process.argv;
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ ...(Number(w) < 800 ? devices["Pixel 7"] : {}), viewport: { width: Number(w), height: Number(h) } });
 const page = await ctx.newPage();
-await page.goto("http://localhost:3100" + path, { waitUntil: "networkidle" });
-await page.waitForTimeout(600);
+await page.goto((process.env.BASE ?? "http://localhost:3100") + path, { waitUntil: "networkidle" });
+// Rola a página inteira para disparar os reveals antes da captura.
+await page.evaluate(async () => {
+  for (let y = 0; y < document.body.scrollHeight; y += 400) {
+    window.scrollTo(0, y);
+    await new Promise((r) => setTimeout(r, 60));
+  }
+  window.scrollTo(0, 0);
+});
+await page.waitForTimeout(900);
 const info = await page.evaluate(() => {
   const b = document.querySelector('[aria-label="Abrir menu"]')?.getBoundingClientRect();
   return { sw: document.documentElement.scrollWidth, iw: innerWidth, btn: b && { x: b.x, y: b.y, w: b.width } };
